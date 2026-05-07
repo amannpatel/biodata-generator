@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("operator")
+  shopId    String?
+  shop      Shop?    @relation(fields: [shopId], references: [id])
+  biodatas  Biodata[]
+  uploads   UploadSession[]
+  auditLogs AuditLog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Shop {
+  id              String   @id @default(cuid())
+  name            String
+  logoUrl         String?
+  address         String?
+  phone           String?
+  defaultTemplate String   @default("simple-classic")
+  users           User[]
+  biodatas        Biodata[]
+  uploads         UploadSession[]
+  auditLogs       AuditLog[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Biodata {
+  id              String   @id @default(cuid())
+  shopId          String
+  shop            Shop     @relation(fields: [shopId], references: [id])
+  createdById     String
+  createdBy       User     @relation(fields: [createdById], references: [id])
+  status          String   @default("draft")
+  templateId      String   @default("simple-classic")
+  biodataJson     Json
+  generatedPdfUrl String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model UploadSession {
+  id                String    @id @default(cuid())
+  shopId            String
+  shop              Shop      @relation(fields: [shopId], references: [id])
+  uploadedById      String
+  uploadedBy        User      @relation(fields: [uploadedById], references: [id])
+  documentType      String
+  temporaryFilePath String
+  status            String    @default("pending")
+  expiresAt         DateTime
+  deletedAt         DateTime?
+  createdAt         DateTime  @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
